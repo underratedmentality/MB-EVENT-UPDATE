@@ -5,6 +5,7 @@ import EventCard from "../EventCard";
 import axios from "axios";
 import Loader from "../Loader"
 import { useFetch } from "../../utils/usefetch";
+import Empty from "../Empty"
 const UpcomingEvents = () => {
   const url = 'https://nb-event-server.onrender.com/api/v1/events/upcoming'
   const {isLoading, data: {events}} = useFetch(url);
@@ -14,7 +15,7 @@ const UpcomingEvents = () => {
     <div className="my-5 container">
       <SectionHeading heading="Upcoming Events" />
       {
-        isLoading ? <Loader height="200px"/> :   <div
+        isLoading ? <Loader height="200px"/> : !isLoading && events.length === 0 ? <Empty height="150px" content="No Upcoming Events"/> :   <div
         className=" d-flex justify-content-between align-items-center gap-4 event-container my-3"
         style={{ overflowX: "scroll" }}
       >
