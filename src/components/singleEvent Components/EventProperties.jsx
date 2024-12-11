@@ -51,7 +51,7 @@ const EventProperties = ({
           </p>
         </div>
         <div className="col-md-4  text-white d-flex justify-content-start justify-content-md-end ">
-          <PaymentCard />
+          <PaymentCard price={price}/>
         </div>
       </div>
     </div>

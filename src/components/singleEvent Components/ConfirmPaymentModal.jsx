@@ -1,12 +1,16 @@
 import React, { useState } from "react";
 import Modal from "react-bootstrap/Modal";
 import ActionBtn from "../ActionBtn";
-
+import { useParams, useNavigate } from "react-router-dom";
+import axios from "axios";
+import Loader from "../Loader";
+import { toast } from "react-toastify";
 const ConfirmPaymentModal = ({
   showModal,
   setShowModal,
   vipPrice,
   regularPrice,
+  free
 }) => {
   // State to hold the ticket counts
   const [vipCount, setVipCount] = useState(0);
@@ -26,7 +30,43 @@ const ConfirmPaymentModal = ({
       type === "increase" ? regularCount + 1 : Math.max(regularCount - 1, 0)
     );
   };
+  const token = localStorage.getItem('mb-token')
+  const {eventId} = useParams()
+  const [isLoading, setIsLoading] = useState(false)
+  const redirect = useNavigate()
+  const url = "https://nb-event-server.onrender.com/api/v1/events/pay"
+  const handlePayment = async ()=> {
+// id of the event
+setIsLoading(true)
+try {
+const {data} = await axios.post(`${url}/${eventId}`, ' ', {headers: {Authorization: `Bearer ${token}`},});
+if (data.success) {
+  toast.success("Payment completed Successfully",{autoClose:10000,
+    position:"top-center"});
+  redirect("/your-events/attending");
+}
+}catch (error) {
+  // console.log(error);
+  if(error&& error.status === 400){
+    toast.error(error?.response?.data?.message,{autoClose:10000,
+      position:"top-center"})
+    setIsLoading(false)
+  }
+  if (error && error.status === 401){
+    toast.error("Session Expired,Login")
+    redirect("/login")
+    localStorage.removeItem("mb-token")
+      localStorage.removeItem("user");
+  }
+}
 
+// token
+  }
+if(isLoading){
+  return <Modal centered show={showModal}>
+    <Loader height="150px"/>
+  </Modal>
+}
   return (
     <Modal centered show={showModal} onHide={() => setShowModal(false)}>
       <div
@@ -36,7 +76,27 @@ const ConfirmPaymentModal = ({
         <div className="mb-5">
           <h1 className="fs-4 text-center">Select Ticket</h1>
         </div>
-
+        {free ? <div className="mt-4 d-flex justify-content-between align-items-center">
+          <span style={{ width: "15%" }}>TICKETS</span>
+          <div className="counter d-flex gap-3">
+          <button
+              onClick={() => handleVipChange("decrease")}
+              style={{ width: "24px", height: "24px" }}
+              className="rounded-circle"
+            >
+              -
+            </button>
+            <span style={{ width: "20%" }}>{vipCount}</span>
+            <button
+              onClick={() => handleVipChange("increase")}
+              style={{ width: "24px", height: "24px" }}
+              className="rounded-circle"
+            >
+              +
+            </button>
+          </div>
+        </div> :
+         <div>
         {/* VIP Ticket Section */}
         <div className="mt-4 d-flex justify-content-between align-items-center">
           <span style={{ width: "15%" }}>VIP</span>
@@ -94,12 +154,26 @@ const ConfirmPaymentModal = ({
           <span>Total</span>
           <span className="fw-bolder">NGN {totalPrice}</span>
         </div>
-
-        <ActionBtn
-          content="Proceed To Payment"
-          width={"100%"}
-          className="herobtn mt-5"
-        />
+        </div>}
+       { free ?
+         <ActionBtn
+         content= {"Get Tickets"}
+         width={"100%"}
+         className={vipCount <= 0 ? "bg-secondary mt-5":"herobtn mt-5"}
+         disable={vipCount <= 0}
+         cursor={vipCount <=0 ? "not-allowed" : "pointer"}
+         handleClick={handlePayment}
+       />
+       :
+       <ActionBtn
+         content={"Proceed To Payment"}
+         width={"100%"}
+         className={totalPrice <= 0 ? "bg-secondary mt-5":"herobtn mt-5"}
+         disable={totalPrice <= 0}
+         cursor={totalPrice <=0 ? "not-allowed" : "pointer"}
+         handleClick={handlePayment}
+       />
+       }
       </div>
     </Modal>
   );
