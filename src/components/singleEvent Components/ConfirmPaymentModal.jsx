@@ -43,6 +43,7 @@ const {data} = await axios.post(`${url}/${eventId}`, ' ', {headers: {Authorizati
 if (data.success) {
   toast.success("Payment completed Successfully",{autoClose:10000,
     position:"top-center"});
+    
   redirect("/your-events/attending");
 }
 }catch (error) {
